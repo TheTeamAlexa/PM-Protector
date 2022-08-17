@@ -10,15 +10,21 @@ else:
     from config import Config
 
 
-@Client.on_message(filters.private & filters.command(['start', 'help']))
-async def help_me(bot, message):
-    if message.from_user.id == Config.ADMIN:
-        return
-    info = await bot.get_users(user_ids=message.from_user.id)
-    await bot.send_message(
-        chat_id=message.chat.id,
-        text=Presets.WELCOME_TEXT.format(info.first_name)
-    )
+@Client.on_message(filters.private & filters.user(Config.ADMIN) & filters.command(['info']))
+async def user_info(bot, message):
+    reference_id = True
+    if message.reply_to_message is not None:
+        file = message.reply_to_message
+        try:
+            reference_id = file.text.split()[2]
+        except Exception:
+            pass
+        try:
+            reference_id = file.caption.split()[2]
+        except Exception:
+            pass
+    info = await bot.get_users(reference_id)
+    await message.delete()
     await bot.send_message(
         chat_id=Config.ADMIN,
         text=Presets.USER_DETAILS.format(
